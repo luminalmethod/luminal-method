@@ -6,15 +6,19 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  
-  if (!apiKey) {
-    return res.status(500).json({ error: 'No API key found' });
-  }
+  if (!apiKey) return res.status(500).json({ error: 'No API key' });
 
   try {
-    let body = req.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
+    // Manually read the raw body stream
+    const rawBody = await new Promise((resolve, reject) => {
+      let data = '';
+      req.on('data', chunk => { data += chunk; });
+      req.on('end', () => resolve(data));
+      req.on('error', reject);
+    });
+
+    if (!rawBody) {
+      return res.status(400).json({ error: 'Empty request body' });
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -24,12 +28,12 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: rawBody,
     });
 
     const rawText = await response.text();
     res.setHeader('Content-Type', 'application/json');
-    res.status(response.status).send(rawText || '{"error":"empty response"}');
+    res.status(response.status).send(rawText || '{"error":"empty response from Anthropic"}');
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

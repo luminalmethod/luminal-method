@@ -1280,7 +1280,7 @@ const callAPI = async (prompt) => {
   const text = await res.text();
   if (!text) throw new Error("Empty response body, status: " + res.status);
   const data = JSON.parse(text);
-  if (data.receivedBody !== undefined) throw new Error("Debug mode: " + JSON.stringify(data));
+
   const raw = data.content?.map(b => b.text || "").join("") || "";
   const clean = raw.replace(/```json[\s\S]*?```|```[\s\S]*?```/g, m => m.replace(/```json\n?|```\n?/g, "")).replace(/```json|```/g, "").trim();
   return JSON.parse(clean);

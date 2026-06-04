@@ -1268,7 +1268,7 @@ export default function App() {
   ];
 
   const callAPI = async (prompt) => {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

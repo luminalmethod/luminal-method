@@ -1311,7 +1311,7 @@ export default function App() {
       setActiveOutput("teaser");
       setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (e) {
-      setError("Generation failed. Please verify all birth data and try again.");
+      setError("Error: " + e.message + " | " + JSON.stringify(e));
       console.error(e);
     }
     clearInterval(msgInterval);

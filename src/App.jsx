@@ -1308,15 +1308,20 @@ const callAPI = async (prompt) => {
       setLoadingMsg(LOADING_MESSAGES[msgIndex]);
     }, 4000);
 
-    try {
-      // PDF runs first — coaching is annotated from its output, saving one full API call
+   try {
       const pdf = await callAPI(buildClientPDFPrompt(form));
-      const [teaser, coaching, cheatsheet] = await Promise.all([
-        callAPI(buildTeaserPrompt(form)),
-        callAPI(buildCoachAnnotationPrompt(pdf)),
-        callAPI(buildCheatsheetPrompt(form)),
-      ]);
-      setResults({ teaser, pdf, coaching, cheatsheet });
+      setResults({ teaser: null, pdf, coaching: null, cheatsheet: null });
+      setActiveOutput("pdf");
+      
+      const teaser = await callAPI(buildTeaserPrompt(form));
+      setResults(r => ({ ...r, teaser }));
+      
+      const cheatsheet = await callAPI(buildCheatsheetPrompt(form));
+      setResults(r => ({ ...r, cheatsheet }));
+      
+      const coaching = await callAPI(buildCoachAnnotationPrompt(pdf));
+      setResults(r => ({ ...r, coaching }));
+      
       setActiveOutput("teaser");
       setTimeout(() => topRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch (e) {

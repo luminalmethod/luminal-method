@@ -1267,21 +1267,30 @@ export default function App() {
     "Almost there...",
   ];
 
-  const callAPI = async (prompt) => {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 8000,
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-    const data = await res.json();
-    const raw = data.content?.map(b => b.text || "").join("") || "";
-    const clean = raw.replace(/```json[\s\S]*?```|```[\s\S]*?```/g, m => m.replace(/```json\n?|```\n?/g, "")).replace(/```json|```/g, "").trim();
-    return JSON.parse(clean);
-  };
+const callAPI = async (prompt) => {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-5",
+      max_tokens: 8000,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  const rawText = await res.text();
+  if (!rawText || rawText === 'EMPTY_RESPONSE') {
+    throw new Error('Empty response from API: ' + res.status);
+  }
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch(e) {
+    throw new Error('Raw response: ' + rawText.substring(0, 200));
+  }
+  const raw = data.content?.map(b => b.text || "").join("") || "";
+  const clean = raw.replace(/```json[\s\S]*?```|```[\s\S]*?```/g, m => m.replace(/```json\n?|```\n?/g, "")).replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+};
 
   const generate = async () => {
     if (!form.name || !form.date || !form.time || !form.location) {

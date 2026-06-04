@@ -1,4 +1,5 @@
 export const maxDuration = 60;
+export const config = { api: { bodyParser: true } };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,18 +10,6 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'No API key' });
 
   try {
-    // Manually read the raw body stream
-    const rawBody = await new Promise((resolve, reject) => {
-      let data = '';
-      req.on('data', chunk => { data += chunk; });
-      req.on('end', () => resolve(data));
-      req.on('error', reject);
-    });
-
-    if (!rawBody) {
-      return res.status(400).json({ error: 'Empty request body' });
-    }
-
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -28,13 +17,13 @@ export default async function handler(req, res) {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: rawBody,
+      body: JSON.stringify(req.body),
     });
 
-    const rawText = await response.text();
+    const text = await response.text();
     res.setHeader('Content-Type', 'application/json');
-    res.status(response.status).send(rawText || '{"error":"empty response from Anthropic"}');
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(response.status).send(text || '{"error":"empty"}');
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
